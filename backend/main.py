@@ -24,7 +24,7 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
 import docx
-from openai import OpenAI
+# Using httpx for OpenAI API calls (no openai library needed)
 
 # ---------- Config ----------
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
