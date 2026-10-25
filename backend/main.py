@@ -27,7 +27,7 @@ import docx
 # Using httpx for OpenAI API calls (no openai library needed)
 
 # ---------- Config ----------
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 MAX_FILES = 20
 MAX_FILE_SIZE_MB = 10
@@ -396,7 +396,7 @@ def chat(practice_id: str, req: ChatRequest):
         openai_messages = [{"role": "system", "content": system}] + messages
         resp = httpx.post(
             "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY.strip()}", "Content-Type": "application/json"},
             json={"model": "gpt-4o-mini", "max_tokens": 1200, "messages": openai_messages},
             timeout=60.0,
         )
