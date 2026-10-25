@@ -60,9 +60,18 @@ PRACTICE_CONDITIONS_PROMPT = (
 
 # ---------- App ----------
 app = FastAPI(title="DokAssist")
+# CORS: allow the configured origin plus Vercel preview deployments
+_cors_origins = ["*"]
+if ALLOWED_ORIGIN and ALLOWED_ORIGIN != "*":
+    _cors_origins = [ALLOWED_ORIGIN]
+    # Also allow Vercel preview deployments
+    if "vercel.app" in ALLOWED_ORIGIN:
+        _cors_origins.append("*")  # Broad for dev, tighten in production
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN] if ALLOWED_ORIGIN != "*" else ["*"],
+    allow_origins=_cors_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
