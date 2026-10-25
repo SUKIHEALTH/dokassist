@@ -404,8 +404,7 @@ def chat(practice_id: str, req: ChatRequest):
             "Ik kon geen antwoord genereren. Probeer het opnieuw.",
         )
     except Exception as e:
-        answer = f"Er ging iets mis bij het genereren van een antwoord. Probeer het opnieuw.
-        ({type(e).__name__}: {str(e)[:300]})" 
+        answer = f"Er ging iets mis bij het genereren van een antwoord. Probeer het opnieuw.({type(e).__name__}: {str(e)[:300]})" 
     sources = list({meta.get("source", "onbekend") for _, meta in retrieved})
 
     return {
