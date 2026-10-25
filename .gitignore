@@ -1,0 +1,14 @@
+node_modules/
+.next/
+__pycache__/
+*.pyc
+/data/
+/chroma/
+.env*.local
+.env
+*.db
+venv/
+.venv/
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
