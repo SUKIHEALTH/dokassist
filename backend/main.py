@@ -24,10 +24,10 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
 import docx
-import anthropic
+from openai import OpenAI
 
 # ---------- Config ----------
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 MAX_FILES = 20
 MAX_FILE_SIZE_MB = 10
@@ -166,7 +166,7 @@ class ChatRequest(BaseModel):
 # ---------- Practice routes ----------
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "has_key": bool(ANTHROPIC_API_KEY)}
+    return {"status": "ok", "has_key": bool(OPENAI_API_KEY)}
 
 
 @app.post("/api/practice")
@@ -346,7 +346,7 @@ def update_conditions(practice_id: str, req: ConditionsUpdate):
 # ---------- Chat ----------
 @app.post("/api/practice/{practice_id}/chat")
 def chat(practice_id: str, req: ChatRequest):
-    if not ANTHROPIC_API_KEY:
+    if not OPENAI_API_KEY:
         raise HTTPException(500, "Server is niet correct geconfigureerd: ontbrekende API-sleutel.")
 
     conn = sqlite3.connect(DB_PATH)
@@ -392,19 +392,20 @@ def chat(practice_id: str, req: ChatRequest):
     messages.append({"role": "user", "content": user_message})
 
     try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model="claude-3-haiku-20240307",
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        # OpenAI uses a different message format - system goes in the messages array
+        openai_messages = [{"role": "system", "content": system}] + messages
+        response = client.chat.completions.create(
+            model="gpt-4o",
             max_tokens=1200,
-            system=system,
-            messages=messages,
+            messages=openai_messages,
         )
-        answer = next(
-            (block.text for block in response.content if block.type == "text"),
-            "Ik kon geen antwoord genereren. Probeer het opnieuw.",
-        )
+        answer = response.choices[0].message.content
+        if not answer:
+            answer = "Ik kon geen antwoord genereren. Probeer het opnieuw."
     except Exception as e:
-        answer = f"Er ging iets mis bij het genereren van een antwoord. Probeer het opnieuw.({type(e).__name__}: {str(e)[:300]})" 
+        answer = f"Er ging iets mis bij het genereren van een antwoord. Probeer het opnieuw. ({type(e).__name__}: {str(e)[:200]})"
+
     sources = list({meta.get("source", "onbekend") for _, meta in retrieved})
 
     return {
