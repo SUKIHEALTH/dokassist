@@ -392,15 +392,17 @@ def chat(practice_id: str, req: ChatRequest):
     messages.append({"role": "user", "content": user_message})
 
     try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        # OpenAI uses a different message format - system goes in the messages array
+        import httpx
         openai_messages = [{"role": "system", "content": system}] + messages
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            max_tokens=1200,
-            messages=openai_messages,
+        resp = httpx.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
+            json={"model": "gpt-4o-mini", "max_tokens": 1200, "messages": openai_messages},
+            timeout=60.0,
         )
-        answer = response.choices[0].message.content
+        if resp.status_code != 200:
+            raise Exception(f"OpenAI {resp.status_code}: {resp.text[:400]}")
+        answer = resp.json()["choices"][0]["message"]["content"]
         if not answer:
             answer = "Ik kon geen antwoord genereren. Probeer het opnieuw."
     except Exception as e:
